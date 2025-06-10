@@ -5,35 +5,20 @@ import csv
 from io import TextIOWrapper
 from openpyxl import load_workbook
 
-BASE_DIR = pathlib.Path('.')
-PATH_FILES_DOWNLOAD = BASE_DIR / 'tmp'
-PATH_ARCHIVE = BASE_DIR / 'attachment'
-PATH_NAME_ZIP = PATH_ARCHIVE / 'zip_file.zip'
+from config import PATH_NAME_ZIP
+
 NAME_FILE_PDF = 'file_example_PDF.pdf'
 NAME_FILE_CSV = 'file_example_CSV.csv'
 NAME_FILE_XLSX = 'file_example_XLSX.xlsx'
 
 
-def test_create_archive():  # создание архива
-    if not PATH_ARCHIVE.exists():  # проверяем существует ли папка
-        PATH_ARCHIVE.mkdir()  # создаем папку если её нет
-    with zipfile.ZipFile(PATH_NAME_ZIP, 'w') as zip_archive:
-        for file in PATH_FILES_DOWNLOAD.iterdir():
-            if file.is_file():
-                zip_archive.write(file, file.name)  # добавляем файл в архив
-    # проверяем, что все файлы добавились
-    with zipfile.ZipFile(PATH_NAME_ZIP) as zip_archive:
-        print(zip_archive.namelist())
-        assert zip_archive.namelist().__len__() == 3
-
-
-def test_read_pdf_zip():  # чтение и проверка содержимого файла pdf из архива
+def test_read_pdf_zip(create_archive):  # чтение и проверка содержимого файла pdf из архива
     with zipfile.ZipFile(PATH_NAME_ZIP) as zip_archive:  # открываем архив
         with zip_archive.open(NAME_FILE_PDF) as pdf_file:  # открываем файл в архиве
             pdf_reader = PdfReader(pdf_file)
             for page in pdf_reader.pages:
                 print(page.extract_text())
-            number_pages = pdf_reader.get_num_pages() # проверяем количество страниц всего
+            number_pages = pdf_reader.get_num_pages()  # проверяем количество страниц всего
             assert number_pages == 8
             # проверяем что присутствует определенный текст на первой, второй и последней странице
             assert pdf_reader.pages[0].extract_text().__contains__(
@@ -44,7 +29,7 @@ def test_read_pdf_zip():  # чтение и проверка содержимо�
                 '© 2012 - 2025 ЦИАН. Крупнейшая и самая достоверная база данных по аренде и продаже жилой, коммерческой и загородной недвижимости - www.cian.ru')
 
 
-def test_read_xlsx_zip():  # чтение и проверка содержимого файла xlsx из архива
+def test_read_xlsx_zip(create_archive):  # чтение и проверка содержимого файла xlsx из архива
     with zipfile.ZipFile(PATH_NAME_ZIP) as zip_archive:  # открываем архив
         with zip_archive.open(NAME_FILE_XLSX) as xlsx_file:  # открываем файл в архиве
             workbook = load_workbook(xlsx_file, data_only=True)
@@ -83,7 +68,7 @@ def test_read_xlsx_zip():  # чтение и проверка содержимо
                                                  'Other Excel tools and training, recommended by Debra')
 
 
-def test_read_csv_zip():  # чтение и проверка содержимого файла csv из архива
+def test_read_csv_zip(create_archive):  # чтение и проверка содержимого файла csv из архива
     row = {}
     with zipfile.ZipFile(PATH_NAME_ZIP) as zip_archive:  # открываем архив
         with zip_archive.open(NAME_FILE_CSV) as csv_file:  # открываем файл в архиве
@@ -92,13 +77,13 @@ def test_read_csv_zip():  # чтение и проверка содержимо�
             for i in range(count_line):
                 row[i] = csv_reader[i]
                 print(row[i])
-            assert count_line == 20 # проверяем количество строк всего
+            assert count_line == 20  # проверяем количество строк всего
             # проверяем содержимое заголовков, следующей строки после заголовков и содержимое последней строки
             assert row[0] == ['name', 'phoneNumber', 'email', 'address', 'userAgent', 'hexcolor']
             assert row[1] == ['Lizzie Stanton Sr.', '(494) 333-0427', 'altenwerth.damien@reichert.net',
                               '5577 Jaren Junction Apt. 952\nParisside, WI 27442',
                               'Mozilla/5.0 (X11; Linux x86_64; rv:7.0) Gecko/20100815 Firefox/36.0', '#a45c57']
             assert row[count_line - 1] == ['Mr. Jaiden Johns', '659-533-8311', 'clarkin@stroman.com',
-                                      '235 Cormier Union Suite 876\nErnserburgh, SC 61471-3406',
-                                      'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/5331 (KHTML, like Gecko) Chrome/36.0.841.0 Mobile Safari/5331',
-                                      '#374582']
+                                           '235 Cormier Union Suite 876\nErnserburgh, SC 61471-3406',
+                                           'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/5331 (KHTML, like Gecko) Chrome/36.0.841.0 Mobile Safari/5331',
+                                           '#374582']
