@@ -1,4 +1,3 @@
-import pathlib
 import zipfile
 from pypdf import PdfReader
 import csv
