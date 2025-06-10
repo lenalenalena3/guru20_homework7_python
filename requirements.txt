@@ -1,0 +1,4 @@
+pytest
+selene == 2.0.0rc9
+pypdf
+openpyxl
